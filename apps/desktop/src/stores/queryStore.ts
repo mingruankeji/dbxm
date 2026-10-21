@@ -122,6 +122,7 @@ import type { SqlParameterOptions } from "@/lib/sql/sqlParameters";
 import { replaceSqlServerLeadingUseQuery, sqlServerLeadingUseScript, switchesDatabaseWithUseStatement, useDatabaseFromStatement } from "@/lib/sql/sqlCompletionLookupTarget";
 import { classifySqlRisk } from "@/lib/sql/sqlRisk";
 import { externalSqlFileDisplayTitles, normalizeExternalSqlPath, relocateExternalSqlPathWithinFolder } from "@/lib/sql/sqlFileOpen";
+import { recordRecentSqlFile } from "@/lib/sql/recentSqlFiles";
 import { clearDataGridPendingSnapshot, clearDataGridPendingSnapshotsForTab } from "@/composables/useDataGridEditor";
 import { combineDataGridOrderByInputs, copyDataGridSortBuilderStatesForTab } from "@/composables/useDataGridSortBuilder";
 import { beginClosingDataGridViewSnapshotsForTab, clearDataGridViewSnapshot, clearDataGridViewSnapshotsForTab } from "@/lib/dataGrid/dataGridViewStateCache";
@@ -3506,6 +3507,7 @@ export const useQueryStore = defineStore("query", () => {
 
   function openExternalSqlFile(connectionId: string, database: string, path: string, sql: string, version?: QueryTab["externalSqlFileVersion"], catalog?: string, schema?: string, reveal?: { line: number; column?: number }, encoding: QueryTab["externalSqlEncoding"] = "auto") {
     const normalizedPath = normalizeExternalSqlPath(path);
+    recordRecentSqlFile(path);
     const existing = tabs.value.find((tab) => tab.mode === "query" && tab.externalSqlPath && normalizeExternalSqlPath(tab.externalSqlPath) === normalizedPath);
     if (existing) {
       if (reveal) existing.editorRevealRequest = { id: ++contentRevealSeq, line: reveal.line, column: reveal.column };
@@ -3545,7 +3547,7 @@ export const useQueryStore = defineStore("query", () => {
     return id;
   }
 
-  function openObjectBrowser(connectionId: string, database: string, schema?: string, catalog?: string, eventName?: string, eventReadOnly = false, initialObjectFilter?: "tables" | "events", eventCreateRequestId?: number) {
+  function openObjectBrowser(connectionId: string, database: string, schema?: string, catalog?: string, eventName?: string, eventReadOnly = false, initialObjectFilter?: ObjectBrowserFilter, eventCreateRequestId?: number) {
     const title = catalog ? `${catalog}.${database} objects` : schema ? `${schema} objects` : `${database} objects`;
     const existing = tabs.value.find((tab) => tab.mode === "objects" && tab.connectionId === connectionId && tab.database === database && (tab.objectBrowser?.catalog || "") === (catalog || "") && (tab.objectBrowser?.schema || "") === (schema || ""));
     if (existing) {
@@ -3568,6 +3570,16 @@ export const useQueryStore = defineStore("query", () => {
           eventCreateRequestId: undefined,
           initialObjectFilter: initialObjectFilter ?? (eventName ? "events" : existing.objectBrowser?.initialObjectFilter),
           eventOpenRequestId: (existing.objectBrowser?.eventOpenRequestId ?? 0) + 1,
+        };
+      } else if (initialObjectFilter !== undefined) {
+        existing.objectBrowser = {
+          ...existing.objectBrowser,
+          initialObjectFilter,
+          filter: initialObjectFilter,
+          eventName: undefined,
+          eventOpenRequestId: undefined,
+          eventCreateRequestId: undefined,
+          viewport: existing.objectBrowser?.filter === initialObjectFilter ? existing.objectBrowser?.viewport : undefined,
         };
       }
       switchTab(existing.id);
@@ -3593,6 +3605,7 @@ export const useQueryStore = defineStore("query", () => {
         eventName: eventCreateRequestId !== undefined ? undefined : eventName,
         eventReadOnly: eventCreateRequestId !== undefined ? false : eventReadOnly,
         initialObjectFilter: initialObjectFilter ?? (eventName || eventCreateRequestId !== undefined ? "events" : undefined),
+        filter: initialObjectFilter,
         eventOpenRequestId: eventName ? 1 : undefined,
         eventCreateRequestId,
       },
@@ -6105,6 +6118,7 @@ export const useQueryStore = defineStore("query", () => {
   function linkExternalSqlPath(id: string, path: string, title?: string, version?: QueryTab["externalSqlFileVersion"], encoding: QueryTab["externalSqlEncoding"] = "auto") {
     const tab = tabs.value.find((t) => t.id === id);
     if (!tab) return;
+    recordRecentSqlFile(path);
     tab.externalSqlPath = path;
     tab.externalSqlEncoding = encoding;
     tab.externalSqlFileVersion = version;

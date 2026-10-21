@@ -8666,6 +8666,8 @@ export default withEnglishFallback({
     completedWithErrors: "Выполнение завершено: успешно {succeeded}, с ошибкой {failed}",
   },
   sqlFileTree: {
+    recentFiles: "Недавно открытые",
+    clearRecentFiles: "Очистить недавние файлы",
     folderNameInvalid: "Введите одно имя папки, а не путь.",
     folderNameExcluded: "Это имя папки исключено из обозревателя SQL-файлов.",
     folderDepthExceeded: "Достигнута максимальная глубина папок.",

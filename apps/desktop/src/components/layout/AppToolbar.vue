@@ -660,7 +660,9 @@ const toolbarStyle = computed(() => {
       />
     </template>
 
-    <div class="flex-1" data-tauri-drag-region />
+    <div class="flex-1 min-w-0 truncate text-center text-xs font-medium text-muted-foreground select-none" data-tauri-drag-region>
+      <span class="pointer-events-none">大V专用版 😊</span>
+    </div>
 
     <!-- Right-side items wrapped in overflow-aware container -->
     <div ref="rightWrapper" class="flex min-w-0 items-center gap-1 overflow-hidden">

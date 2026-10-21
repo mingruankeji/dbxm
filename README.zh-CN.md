@@ -287,6 +287,8 @@ CodeMirror 6 语法高亮、元数据感知自动补全、`Cmd+Enter` 执行、�
 ### Schema 工具
 
 - **结构浏览** — 数据库、Schema、表、字段、索引、外键、触发器，支持侧边栏搜索和置顶
+- **树与对象列表联动** — 默认在激活数据库或 Schema 时打开或激活对应的对象页面；单击“表”“视图”“存储过程”等分类会复用该页面并显示对应列表。数据库激活遵循侧边栏的单击/双击设置，可在设置中关闭“激活数据库节点时浏览对象”。
+- **最近 SQL 文件** — 桌面端 SQL 文件面板保留最近打开的 10 个 SQL 文件，支持重新打开、清空记录，并在文件或文件夹重命名时更新路径。
 - **对象浏览** — 按类型分组查看过程、函数、视图，并在支持的数据库中编辑源码
 - **表结构编辑器** — 对支持的数据库执行可审查的字段和索引变更
 - **ER 关系图** — 可视化表间关联
@@ -586,6 +588,16 @@ make package
 ```
 
 安装包输出在 `src-tauri/target/release/bundle/` 目录。
+
+Windows 本地构建需要 Visual Studio C++ 工具链、Rust、Node.js 和 pnpm。在已初始化 `vcvars64.bat` 的 x64 开发者命令提示符中，可执行：
+
+```bat
+pnpm tauri build --bundles nsis --no-sign --ci --config "{\"bundle\":{\"createUpdaterArtifacts\":false}}"
+```
+
+这是不生成更新签名的本地安装包；不要将其用作官方自动更新发布包。若本地配置了 VS Code 的 `Build DBX Windows x64` 任务，可打开项目根目录，按 `Ctrl+Shift+B` 选择该任务；`.vscode/` 属于本机配置，不纳入版本控制。
+
+`pnpm build` 会先清理根目录的 `dist/`，避免旧前端资源残留并被打包到 Rust 可执行文件。桌面界面位于 `apps/desktop/`，Rust 主程序和核心逻辑位于 `src-tauri/`、`crates/`；`agents/` 下的 Go/Java 数据库驱动独立构建，不意味着每次都会全部编入主程序。
 
 ## 技术栈
 

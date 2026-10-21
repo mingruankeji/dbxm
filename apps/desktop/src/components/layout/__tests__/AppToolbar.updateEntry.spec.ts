@@ -128,6 +128,22 @@ describe("AppToolbar update entry visibility", () => {
     mounted = null;
   });
 
+  it("shows the custom edition label before the update control without changing its action", async () => {
+    useSettingsStore().editorSettings.toolbarItems.checkUpdates = true;
+    const onCheckUpdates = vi.fn();
+    mounted = mount({ onCheckUpdates });
+    await nextTick();
+
+    const label = Array.from(mounted.host.querySelectorAll("span")).find((element) => element.textContent === "大V专用版 😊");
+    const trigger = mounted.host.querySelector<HTMLButtonElement>("[data-toolbar-update-trigger]");
+    expect(label).toBeDefined();
+    expect(label?.parentElement?.hasAttribute("data-tauri-drag-region")).toBe(true);
+    expect(label!.compareDocumentPosition(trigger!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+
+    trigger!.click();
+    expect(onCheckUpdates).toHaveBeenCalledOnce();
+  });
+
   it("hides the toolbar update control when checkUpdates is off even if an update is available", async () => {
     const settingsStore = useSettingsStore();
     settingsStore.editorSettings.toolbarItems.checkUpdates = false;
